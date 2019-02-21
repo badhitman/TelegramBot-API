@@ -1,4 +1,7 @@
-﻿using System.Runtime.Serialization;
+﻿////////////////////////////////////////////////
+// © https://github.com/badhitman - Telegram @fakegov 
+////////////////////////////////////////////////
+using System.Runtime.Serialization;
 
 namespace TelegramBot.TelegramMetadata.AvailableTypes.InlineMode
 {
