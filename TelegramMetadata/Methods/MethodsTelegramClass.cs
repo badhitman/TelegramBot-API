@@ -18,6 +18,58 @@ using TelegramBot.TelegramMetadata.MethodsMetadata.Metadata;
 
 namespace TelegramBot.TelegramMetadata
 {
+
+    /// <summary>
+    /// Типы данных сообщения
+    /// </summary>
+    public enum TelegramDataTypes
+    {
+        /// <summary>
+        /// Признак того что к сообщению прикреплена локация
+        /// </summary>
+        Location,
+
+        /// <summary>
+        /// Признак того что в сообщении есть локация
+        /// </summary>
+        LocationText,
+
+        /// <summary>
+        /// Признак того что к сообщению прикреплено фото
+        /// </summary>
+        Photo,
+
+        /// <summary>
+        /// Признак того что к сообщению прикреплено видео
+        /// </summary>
+        Video,
+
+        /// <summary>
+        /// Признак того что к сообщению прикреплено аудио
+        /// </summary>
+        Audio,
+
+        /// <summary>
+        /// Признак того что к сообщению прикреплен документ
+        /// </summary>
+        Document,
+
+        /// <summary>
+        /// Признак того что у сообщения назначено описание медиа-данных
+        /// </summary>
+        Caption,
+
+        /// <summary>
+        /// Признак того что в сообщении есть текст
+        /// </summary>
+        Text,
+
+        /// <summary>
+        /// Признак того данное сообщение-уведомление говорит о том что в групу добавлен новый учасник
+        /// </summary>
+        NewChatMembers
+    }
+
     /// <summary>
     /// Все методы в Bot API нечувствительны к регистру. Мы поддерживаем методы HTTP GET и POST.
     /// Для передачи параметров в запросах Bot API используйте URL запросы (https://en.wikipedia.org/wiki/Query_string)
@@ -104,7 +156,7 @@ namespace TelegramBot.TelegramMetadata
             }
 
             string[] url_param_arr = http_params.ToArray();
-            
+
             string query_string = string.Join("&", url_param_arr);
             onLogReceivedCall("Исходящий запрос к TelegramBot серверу: " + api_bot_method_name + " ? " + query_string, LogMode.Trace);
 
@@ -190,7 +242,7 @@ namespace TelegramBot.TelegramMetadata
                 //}
             }
 
-            
+
             WebResponse _raw;
             HttpWebResponse httpResponse;
 
@@ -206,18 +258,18 @@ namespace TelegramBot.TelegramMetadata
             {
                 onLogReceivedCall("Ошибка при получении от вета от сервера Телеги:\n\n" + WE.Message, LogMode.Err);
                 httpResponse = (HttpWebResponse)WE.Response;
-                if(httpResponse is null || httpResponse == null)
+                if (httpResponse is null || httpResponse == null)
                 {
                     onLogReceivedCall("Произошла ошибка при запросе к серверу Telegram. (HTTP Response is null)\n", LogMode.Alert);
                 }
                 else
-                using (StreamReader streamReader = new StreamReader(httpResponse.GetResponseStream()))
-                {
-                    string ss = streamReader.ReadToEnd();
-                    http_response_raw = ss;
-                    
-                    onLogReceivedCall("Произошла ошибка при запросе к серверу Telegram\n" + http_response_raw, LogMode.Alert);
-                }
+                    using (StreamReader streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                    {
+                        string ss = streamReader.ReadToEnd();
+                        http_response_raw = ss;
+
+                        onLogReceivedCall("Произошла ошибка при запросе к серверу Telegram\n" + http_response_raw, LogMode.Alert);
+                    }
                 return;
             }
             //
@@ -263,7 +315,7 @@ namespace TelegramBot.TelegramMetadata
         {
             getUpdatesJSON updates_filter = new getUpdatesJSON()
             {
-                offset = offset+1,
+                offset = offset + 1,
                 limit = _limit,
                 allowed_updates = new string[0]
             };
@@ -536,7 +588,7 @@ namespace TelegramBot.TelegramMetadata
 
             List<string> skip_fields = new List<string>();
 
-            if (live_period<=0)
+            if (live_period <= 0)
                 skip_fields.Add("live_period");
 
             if (!disable_notification)
