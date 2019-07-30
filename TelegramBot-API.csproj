@@ -13,8 +13,4 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\MultiTool\MultiTool.csproj" />
-  </ItemGroup>
-
 </Project>

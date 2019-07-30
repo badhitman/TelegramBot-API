@@ -1,7 +1,6 @@
 ﻿////////////////////////////////////////////////
 // © https://github.com/badhitman - @fakegov 
 ////////////////////////////////////////////////
-using MultiTool;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -201,45 +200,6 @@ namespace TelegramBot.TelegramMetadata
                         throw new NotImplementedException("Не возможно выполнить запрос к серверу. Смотрите логи");
                     }
                 }
-
-                //   T:System.ObjectDisposedException:
-                //     In a .NET Compact Framework application, a request stream with zero content length
-                //     was not obtained and closed correctly. For more information about handling zero
-                //     content length requests, see Network Programming in the .NET Compact Framework.
-                //catch (ObjectDisposedException ode)
-                //{
-                //    onLogReceivedCall("T:System.ObjectDisposedException: " + ode.Message, LogMode.Alert);
-                //}
-
-                // Исключения:
-                //   T:System.Net.ProtocolViolationException:
-                //     The System.Net.HttpWebRequest.Method property is GET or HEAD. -or- System.Net.HttpWebRequest.KeepAlive
-                //     is true, System.Net.HttpWebRequest.AllowWriteStreamBuffering is false, System.Net.HttpWebRequest.ContentLength
-                //     is -1, System.Net.HttpWebRequest.SendChunked is false, and System.Net.HttpWebRequest.Method
-                //     is POST or PUT.
-                //catch (ProtocolViolationException pve)
-                //{
-                //    onLogReceivedCall("T:System.Net.ProtocolViolationException: " + pve.Message, LogMode.Alert);
-                //}
-
-                //   T:System.InvalidOperationException:
-                //     The System.Net.HttpWebRequest.GetRequestStream method is called more than once.
-                //     -or- System.Net.HttpWebRequest.TransferEncoding is set to a value and System.Net.HttpWebRequest.SendChunked
-                //     is false.
-                //catch (InvalidOperationException ioe)
-                //{
-                //    onLogReceivedCall("T:System.InvalidOperationException: " + ioe.Message, LogMode.Alert);
-                //}
-
-                //   T:System.NotSupportedException:
-                //     The request cache validator indicated that the response for this request can
-                //     be served from the cache; however, requests that write data must not use the
-                //     cache. This exception can occur if you are using a custom cache validator that
-                //     is incorrectly implemented.
-                //catch (NotSupportedException nse)
-                //{
-                //    onLogReceivedCall("T:System.NotSupportedException: " + nse.Message, LogMode.Alert);
-                //}
             }
 
 
@@ -320,7 +280,7 @@ namespace TelegramBot.TelegramMetadata
                 allowed_updates = new string[0]
             };
 
-            SendRequest(glob_tools.GetCurrentMethod(), updates_filter.GetFiealds(new string[0]));
+            SendRequest(nameof(getUpdates), updates_filter.GetFiealds(new string[0]));
             if (string.IsNullOrEmpty(http_response_raw))
                 return new Update[0];
 
@@ -339,7 +299,7 @@ namespace TelegramBot.TelegramMetadata
         /// <returns>Returns basic information about the bot in form of a User (https://core.telegram.org/bots/api#user) object.</returns>
         public UserClass getMe()
         {
-            SendRequest(glob_tools.GetCurrentMethod(), null);
+            SendRequest(nameof(getMe), null);
             if (string.IsNullOrEmpty(http_response_raw))
                 return null;
             getMeJSON.Result result = (getMeJSON.Result)SerialiserJSON.ReadObject(typeof(getMeJSON.Result), http_response_raw);
@@ -418,7 +378,7 @@ namespace TelegramBot.TelegramMetadata
             if (reply_markup == null)
                 skip_fields.Add("reply_markup");
 
-            SendRequest(glob_tools.GetCurrentMethod(), send_msg_json.GetFiealds(skip_fields.ToArray()));
+            SendRequest(nameof(sendMessage), send_msg_json.GetFiealds(skip_fields.ToArray()));
             if (string.IsNullOrEmpty(http_response_raw))
                 return null;
             sendMessageJSON.Result result = (sendMessageJSON.Result)SerialiserJSON.ReadObject(typeof(sendMessageJSON.Result), http_response_raw);
@@ -445,7 +405,7 @@ namespace TelegramBot.TelegramMetadata
             if (!disable_notification)
                 skip_fields.Add("disable_notification");
 
-            SendRequest(glob_tools.GetCurrentMethod(), forward_msg_json.GetFiealds(skip_fields.ToArray()));
+            SendRequest( nameof(forwardMessage) , forward_msg_json.GetFiealds(skip_fields.ToArray()));
             if (string.IsNullOrEmpty(http_response_raw))
                 return null;
             forwardMessageJSON.Result result = (forwardMessageJSON.Result)SerialiserJSON.ReadObject(typeof(forwardMessageJSON.Result), http_response_raw);
@@ -600,7 +560,7 @@ namespace TelegramBot.TelegramMetadata
             if (reply_markup == null)
                 skip_fields.Add("reply_markup");
 
-            SendRequest(glob_tools.GetCurrentMethod(), send_location_json.GetFiealds(skip_fields.ToArray()));
+            SendRequest(nameof(sendLocation), send_location_json.GetFiealds(skip_fields.ToArray()));
             if (string.IsNullOrEmpty(http_response_raw.Trim()))
                 return null;
             sendMessageJSON.Result result = (sendMessageJSON.Result)SerialiserJSON.ReadObject(typeof(sendMessageJSON.Result), http_response_raw);
@@ -675,7 +635,7 @@ namespace TelegramBot.TelegramMetadata
                 skip_fields.Add("reply_markup");
 
 
-            SendRequest(glob_tools.GetCurrentMethod(), send_venue_json.GetFiealds(skip_fields.ToArray()));
+            SendRequest(nameof(sendVenue), send_venue_json.GetFiealds(skip_fields.ToArray()));
             if (string.IsNullOrEmpty(http_response_raw))
                 return null;
             sendMessageJSON.Result result = (sendMessageJSON.Result)SerialiserJSON.ReadObject(typeof(sendMessageJSON.Result), http_response_raw);
@@ -732,7 +692,7 @@ namespace TelegramBot.TelegramMetadata
         public FileClass getFile(string file_id)
         {
             getFileJSON get_file_json = new getFileJSON() { file_id = file_id };
-            SendRequest(glob_tools.GetCurrentMethod(), get_file_json.GetFiealds(new string[0]));
+            SendRequest(nameof(getFile), get_file_json.GetFiealds(new string[0]));
             if (string.IsNullOrEmpty(http_response_raw.Trim()))
                 return null;
             getFileJSON.Result result = (getFileJSON.Result)SerialiserJSON.ReadObject(typeof(getFileJSON.Result), http_response_raw);
@@ -914,7 +874,7 @@ namespace TelegramBot.TelegramMetadata
         public ChatMemberClass[] getChatAdministrators(string chat_id)
         {
             getChatAdministratorsJSON get_chat_administrators_json = new getChatAdministratorsJSON() { chat_id = chat_id };
-            SendRequest(glob_tools.GetCurrentMethod(), get_chat_administrators_json.GetFiealds(new string[0]));
+            SendRequest(nameof(getChatAdministrators), get_chat_administrators_json.GetFiealds(new string[0]));
             if (string.IsNullOrEmpty(http_response_raw.Trim()))
                 return null;
             getChatAdministratorsJSON.Result result = (getChatAdministratorsJSON.Result)SerialiserJSON.ReadObject(typeof(getChatAdministratorsJSON.Result), http_response_raw);
@@ -1162,7 +1122,7 @@ namespace TelegramBot.TelegramMetadata
                 chat_id = chat_id,
                 message_id = message_id
             };
-            SendRequest(glob_tools.GetCurrentMethod(), forward_msg_json.GetFiealds(new string[0]));
+            SendRequest(nameof(deleteMessage), forward_msg_json.GetFiealds(new string[0]));
             if (string.IsNullOrEmpty(http_response_raw))
                 return false;
 
