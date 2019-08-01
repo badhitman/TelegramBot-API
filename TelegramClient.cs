@@ -1,10 +1,13 @@
 ﻿////////////////////////////////////////////////
 // © https://github.com/badhitman - @fakegov 
 ////////////////////////////////////////////////
+using SimpleWebClient;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Web;
 using TelegramBot.TelegramMetadata.AvailableTypes;
@@ -96,7 +99,7 @@ namespace TelegramBot.TelegramMetadata
     /// All methods in the Bot API are case-insensitive.
     /// All queries must be made using UTF-8.
     /// </summary>
-    public class MethodsTelegramClass
+    public class TelegramClient
     {
         public enum LogMode { Info, Ok, Err, Alert, Trace };
 
@@ -106,26 +109,13 @@ namespace TelegramBot.TelegramMetadata
         private string http_response_raw = "";
         public Int64 offset;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static class HTTP_options
-        {
-            public static string Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
-            public static bool AllowAutoRedirect = true;
-            public static string ContentType = "application/x-www-form-urlencoded";
-            public static string host = "api.telegram.org";
-            public static string Method = "POST";
-            public static int RetriesSendWebReques = 5;
-        }
-
         private HttpWebRequest httpWebRequest;
         public UserClass Me;
         private string apiUrl { get { return "https://api.telegram.org/bot" + api_bot_token; } } // apiUrl = proto_part + "://" + HTTP_options.host + port_part + "/bot" + this.CurrentToken;
         private string apiFileUrl { get { return "https://api.telegram.org/file/bot" + api_bot_token + "/"; } }
         private string api_bot_token;
 
-        public MethodsTelegramClass(string _api_bot_token)
+        public TelegramClient(string _api_bot_token)
         {
             api_bot_token = _api_bot_token;
             Me = getMe();
@@ -137,109 +127,17 @@ namespace TelegramBot.TelegramMetadata
                 onLogEvent(msg_txt, lm);
         }
 
-        private void SendRequest(string api_bot_method_name, Dictionary<string, string> request_param)
-        { // onLogReceivedCall("", LogMode.Trace);
-            onLogReceivedCall("Начало формирования запроса к Telegram: " + apiUrl.ToString(), LogMode.Trace);
+        private void SendRequest(string api_bot_method_name, NameValueCollection request_param, InputFileClass file_post = null)
+        {
             http_response_raw = "";
-            if (request_param == null || request_param is null)
-            {
-                onLogReceivedCall("request_param == null || request_param is null", LogMode.Trace);
-                request_param = new Dictionary<string, string>();
-            }
+            if (request_param != null && !string.IsNullOrEmpty(request_param["text"]))
+                request_param["text"] = HttpUtility.UrlEncode(request_param["text"]);
 
-            List<string> http_params = new List<string>();
-            foreach (KeyValuePair<string, string> s in request_param)
-            {
-                http_params.Add(s.Key + "=" + (s.Key == "text" ? HttpUtility.UrlEncode(s.Value) : s.Value));
-                onLogReceivedCall("+ request param: " + http_params[http_params.Count - 1], LogMode.Trace);
-            }
+            if (file_post == null)
+                http_response_raw = MyWebClient.SendRequest(apiUrl + "/" + api_bot_method_name, HttpMethod.Post, request_param, null, MyWebClient.RequestContentTypes.ApplicationXWwwFormUrlencoded);
+            else
+                http_response_raw = MyWebClient.SendRequest(apiUrl + "/" + api_bot_method_name, HttpMethod.Post, request_param, new List<PostedFile>() { new PostedFile() { Data = file_post.Data, FieldName = file_post.FieldName, FileName = file_post.FileName } }, MyWebClient.RequestContentTypes.MultipartFormData);
 
-            string[] url_param_arr = http_params.ToArray();
-
-            string query_string = string.Join("&", url_param_arr);
-            onLogReceivedCall("Исходящий запрос к TelegramBot серверу: " + api_bot_method_name + " ? " + query_string, LogMode.Trace);
-
-            byte[] query_data = Encoding.UTF8.GetBytes(query_string);
-
-            onLogReceivedCall("WebRequest wr = WebRequest.Create( ... );", LogMode.Trace);
-            WebRequest wr = WebRequest.Create(apiUrl + "/" + api_bot_method_name + "?guid=" + Guid.NewGuid().ToString());
-            wr.CachePolicy = new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
-
-            onLogReceivedCall("httpWebRequest = (HttpWebRequest)wr;", LogMode.Trace);
-            httpWebRequest = (HttpWebRequest)wr;
-
-            httpWebRequest.Accept = HTTP_options.Accept;
-            httpWebRequest.AllowAutoRedirect = HTTP_options.AllowAutoRedirect;
-            httpWebRequest.ContentType = HTTP_options.ContentType;
-            httpWebRequest.ContentLength = query_data.Length;
-            httpWebRequest.Host = HTTP_options.host;
-            httpWebRequest.Method = HTTP_options.Method;
-            for (int ii = 1; ii <= HTTP_options.RetriesSendWebReques; ii++)
-            {
-                try
-                {
-                    onLogReceivedCall("httpWebRequest.GetRequestStream()", LogMode.Trace);
-                    using (Stream stream = httpWebRequest.GetRequestStream())
-                    {
-                        stream.Write(query_data, 0, query_data.Length);
-                    }
-                    //if (api_bot_method_name != "getUpdates")
-                    onLogReceivedCall("OK - Данные отправлены на сервер TelegramBot", LogMode.Trace);
-                    break;
-                }
-
-                //   T:System.Net.WebException:
-                //     System.Net.HttpWebRequest.Abort was previously called. -or- The time-out period
-                //     for the request expired. -or- An error occurred while processing the request.
-                catch (WebException e)
-                {
-                    onLogReceivedCall("!!! - ошибка сети (попытка связи [" + ii + "]): " + e.Message, LogMode.Alert);
-                    if (ii > HTTP_options.RetriesSendWebReques)
-                    {
-                        onLogReceivedCall("Err - не возможно выполнить запрос к серверу. Смотрите логи" + e.Message, LogMode.Err);
-                        throw new NotImplementedException("Не возможно выполнить запрос к серверу. Смотрите логи");
-                    }
-                }
-            }
-
-
-            WebResponse _raw;
-            HttpWebResponse httpResponse;
-
-            try
-            {
-                onLogReceivedCall("try httpWebRequest.GetResponse()", LogMode.Trace);
-                _raw = httpWebRequest.GetResponse();
-                httpResponse = (HttpWebResponse)_raw;
-                //if (api_bot_method_name != "getUpdates")
-                onLogReceivedCall("HTTP ответ получен", LogMode.Trace);
-            }
-            catch (WebException WE)
-            {
-                onLogReceivedCall("Ошибка при получении от вета от сервера Телеги:\n\n" + WE.Message, LogMode.Err);
-                httpResponse = (HttpWebResponse)WE.Response;
-                if (httpResponse is null || httpResponse == null)
-                {
-                    onLogReceivedCall("Произошла ошибка при запросе к серверу Telegram. (HTTP Response is null)\n", LogMode.Alert);
-                }
-                else
-                    using (StreamReader streamReader = new StreamReader(httpResponse.GetResponseStream()))
-                    {
-                        string ss = streamReader.ReadToEnd();
-                        http_response_raw = ss;
-
-                        onLogReceivedCall("Произошла ошибка при запросе к серверу Telegram\n" + http_response_raw, LogMode.Alert);
-                    }
-                return;
-            }
-            //
-            using (StreamReader streamReader = new StreamReader(httpResponse.GetResponseStream()))
-            {
-                string ss = streamReader.ReadToEnd();
-                http_response_raw = ss;
-                //if (api_bot_method_name != "getUpdates")
-                onLogReceivedCall(http_response_raw, LogMode.Trace);
-            }
         }
 
         /// <summary>
@@ -379,6 +277,7 @@ namespace TelegramBot.TelegramMetadata
                 skip_fields.Add("reply_markup");
 
             SendRequest(nameof(sendMessage), send_msg_json.GetFiealds(skip_fields.ToArray()));
+
             if (string.IsNullOrEmpty(http_response_raw))
                 return null;
             sendMessageJSON.Result result = (sendMessageJSON.Result)SerialiserJSON.ReadObject(typeof(sendMessageJSON.Result), http_response_raw);
@@ -405,10 +304,64 @@ namespace TelegramBot.TelegramMetadata
             if (!disable_notification)
                 skip_fields.Add("disable_notification");
 
-            SendRequest( nameof(forwardMessage) , forward_msg_json.GetFiealds(skip_fields.ToArray()));
+            SendRequest(nameof(forwardMessage), forward_msg_json.GetFiealds(skip_fields.ToArray()));
             if (string.IsNullOrEmpty(http_response_raw))
                 return null;
             forwardMessageJSON.Result result = (forwardMessageJSON.Result)SerialiserJSON.ReadObject(typeof(forwardMessageJSON.Result), http_response_raw);
+            return result.result;
+        }
+
+        /// <summary>
+        /// Use this method to send general files. On success, the sent Message is returned. Bots can currently send files of any type of up to 50 MB in size, this limit may be changed in the future.
+        /// </summary>
+        /// <param name="chat_id">Unique identifier for the target chat or username of the target channel (in the format @channelusername)</param>
+        /// <param name="document">File to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. More info on Sending Files »</param>
+        /// <param name="thumb">InputFile or String 	Optional 	Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail‘s width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can’t be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. More info on Sending Files »</param>
+        /// <param name="caption">Document caption (may also be used when resending documents by file_id), 0-200 characters</param>
+        /// <param name="disable_notification">Sends the message silently. Users will receive a notification with no sound.</param>
+        /// <param name="reply_to_message_id">If the message is a reply, ID of the original message</param>
+        /// <param name="reply_markup">InlineKeyboardMarkup or ReplyKeyboardMarkup or ReplyKeyboardRemove or ForceReply [Optional] Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user.</param>
+        /// <returns>On success, the sent Message is returned</returns>
+        public MessageClass sendDocument(string chat_id, object document, string caption = null, object thumb = null, string parse_mode = "", bool disable_notification = false, long reply_to_message_id = 0, object reply_markup = null)
+        {
+            sendDocumentJSON send_document_json = new sendDocumentJSON()
+            {
+                chat_id = chat_id
+            };
+
+            List<string> skip_fields = new List<string>() { "document", "thumb" };
+
+            if (string.IsNullOrEmpty(caption))
+                skip_fields.Add("caption");
+
+            if (string.IsNullOrEmpty(parse_mode))
+                skip_fields.Add("parse_mode");
+
+            if (!disable_notification)
+                skip_fields.Add("disable_notification");
+
+            if (reply_to_message_id == 0)
+                skip_fields.Add("reply_to_message_id");
+            else
+                send_document_json.reply_to_message_id = reply_to_message_id.ToString();
+
+            if (reply_markup == null)
+                skip_fields.Add("reply_markup");
+
+            if (document is string || document is int)
+            {
+                SendRequest(nameof(sendDocument), send_document_json.GetFiealds(skip_fields.ToArray()));
+                if (string.IsNullOrEmpty(http_response_raw))
+                    return null;
+            }
+            else if (document is InputFileClass)
+            {
+                skip_fields.Add("document");
+                SendRequest(nameof(sendDocument), send_document_json.GetFiealds(skip_fields.ToArray()), (InputFileClass)document);
+                if (string.IsNullOrEmpty(http_response_raw))
+                    return null;
+            }
+            sendDocumentJSON.Result result = (sendDocumentJSON.Result)SerialiserJSON.ReadObject(typeof(sendDocumentJSON.Result), http_response_raw);
             return result.result;
         }
 
@@ -422,10 +375,48 @@ namespace TelegramBot.TelegramMetadata
         /// <param name="reply_to_message_id">If the message is a reply, ID of the original message</param>
         /// <param name="reply_markup">InlineKeyboardMarkup or ReplyKeyboardMarkup or ReplyKeyboardRemove or ForceReply [Optional] Additional interface options. A JSON-serialized object for an inline keyboard (https://core.telegram.org/bots#inline-keyboards-and-on-the-fly-updating), custom reply keyboard (https://core.telegram.org/bots#keyboards), instructions to remove reply keyboard or to force a reply from the user.</param>
         /// <returns>On success, the sent Message is returned.</returns>
-        public MessageClass sendPhoto(string chat_id, object photo, string caption = null, bool disable_notification = false, long reply_to_message_id = -1, object reply_markup = null)
+        public MessageClass sendPhoto(string chat_id, object photo, string caption = null, string parse_mode = null, bool disable_notification = false, long reply_to_message_id = -1, object reply_markup = null)
         {
+            sendPhotoJSON send_photo_json = new sendPhotoJSON()
+            {
+                chat_id = chat_id
+            };
 
-            return null;
+            List<string> skip_fields = new List<string>() { "photo" };
+
+            if (string.IsNullOrEmpty(caption))
+                skip_fields.Add("caption");
+
+            if (string.IsNullOrEmpty(parse_mode))
+                skip_fields.Add("parse_mode");
+
+            if (!disable_notification)
+                skip_fields.Add("disable_notification");
+
+            if (reply_to_message_id == 0)
+                skip_fields.Add("reply_to_message_id");
+            else
+                send_photo_json.reply_to_message_id = reply_to_message_id.ToString();
+
+            if (reply_markup == null)
+                skip_fields.Add("reply_markup");
+
+
+            if (photo is string || photo is int)
+            {
+                SendRequest(nameof(sendPhoto), send_photo_json.GetFiealds(skip_fields.ToArray()));
+                if (string.IsNullOrEmpty(http_response_raw))
+                    return null;
+            }
+            else if (photo is InputFileClass)
+            {
+                skip_fields.Add("photo");
+                SendRequest(nameof(sendPhoto), send_photo_json.GetFiealds(skip_fields.ToArray()), (InputFileClass)photo);
+                if (string.IsNullOrEmpty(http_response_raw))
+                    return null;
+            }
+            sendPhotoJSON.Result result = (sendPhotoJSON.Result)SerialiserJSON.ReadObject(typeof(sendPhotoJSON.Result), http_response_raw);
+            return result.result;
         }
 
         /// <summary>
@@ -445,21 +436,6 @@ namespace TelegramBot.TelegramMetadata
         public MessageClass sendAudio(string chat_id, object audio, string caption = null, long duration = -1, string performer = null, string title = null, bool disable_notification = false, long reply_to_message_id = -1, object reply_markup = null)
         {
 
-            return null;
-        }
-
-        /// <summary>
-        /// Use this method to send general files. Bots can currently send files of any type of up to 50 MB in size, this limit may be changed in the future.
-        /// </summary>
-        /// <param name="chat_id">Unique identifier for the target chat or username of the target channel (in the format @channelusername)</param>
-        /// <param name="document">File to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. More info on Sending Files »</param>
-        /// <param name="caption">Document caption (may also be used when resending documents by file_id), 0-200 characters</param>
-        /// <param name="disable_notification">Sends the message silently. Users will receive a notification with no sound.</param>
-        /// <param name="reply_to_message_id">If the message is a reply, ID of the original message</param>
-        /// <param name="reply_markup">InlineKeyboardMarkup or ReplyKeyboardMarkup or ReplyKeyboardRemove or ForceReply [Optional] Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user.</param>
-        /// <returns>On success, the sent Message is returned</returns>
-        public MessageClass sendDocument(string chat_id, object document, string caption = null, bool disable_notification = false, long reply_to_message_id = -1, object reply_markup = null)
-        {
             return null;
         }
 

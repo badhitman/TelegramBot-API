@@ -13,4 +13,8 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SimpleWebClient\SimpleWebClient.csproj" />
+  </ItemGroup>
+
 </Project>

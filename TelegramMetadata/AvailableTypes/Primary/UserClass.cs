@@ -46,5 +46,10 @@ namespace TelegramBot.TelegramMetadata.AvailableTypes
         /// </summary>
         [DataMember]
         public string language_code;
+
+        public override string ToString()
+        {
+            return "[id: " + id.ToString() + "] [is_bot: " + is_bot.ToString() + "] [first_name: " + first_name + "] [last_name: " + last_name + "] [username: " + username + "]";
+        }
     }
 }
