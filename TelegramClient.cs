@@ -109,7 +109,6 @@ namespace TelegramBot.TelegramMetadata
         private string http_response_raw = "";
         public Int64 offset;
 
-        private HttpWebRequest httpWebRequest;
         public UserClass Me;
         private string apiUrl { get { return "https://api.telegram.org/bot" + api_bot_token; } } // apiUrl = proto_part + "://" + HTTP_options.host + port_part + "/bot" + this.CurrentToken;
         private string apiFileUrl { get { return "https://api.telegram.org/file/bot" + api_bot_token + "/"; } }
