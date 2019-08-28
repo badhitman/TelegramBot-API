@@ -17,10 +17,10 @@ using TelegramBot.TelegramMetadata.AvailableTypes.Stickers;
 using TelegramBot.TelegramMetadata.GettingUpdates;
 using TelegramBot.TelegramMetadata.Methods.Metadata;
 using TelegramBot.TelegramMetadata.MethodsMetadata.Metadata;
+using static TelegramBot.TelegramMetadata.AvailableTypes.MessageClass;
 
 namespace TelegramBot.TelegramMetadata
 {
-
     /// <summary>
     /// Типы данных сообщения
     /// </summary>
@@ -129,7 +129,7 @@ namespace TelegramBot.TelegramMetadata
         private void SendRequest(string api_bot_method_name, NameValueCollection request_param, InputFileClass file_post = null)
         {
             http_response_raw = "";
-            if (request_param != null && !string.IsNullOrEmpty(request_param["text"]))
+            if (request_param != null && !string.IsNullOrEmpty(request_param["text"]) && string.IsNullOrWhiteSpace(request_param["parse_mode"]))
                 request_param["text"] = HttpUtility.UrlEncode(request_param["text"]);
 
             if (file_post == null)
@@ -251,7 +251,7 @@ namespace TelegramBot.TelegramMetadata
         /// <param name="reply_to_message_id">Optional	If the message is a reply, ID of the original message</param>
         /// <param name="reply_markup">InlineKeyboardMarkup or ReplyKeyboardMarkup or ReplyKeyboardRemove or ForceReply [Optional] Additional interface options. A JSON-serialized object for an inline keyboard (https://core.telegram.org/bots#inline-keyboards-and-on-the-fly-updating), custom reply keyboard (https://core.telegram.org/bots#keyboards), instructions to remove reply keyboard or to force a reply from the user.</param>
         /// <returns>On success, the sent Message (https://core.telegram.org/bots/api#message) is returned.</returns>
-        public MessageClass sendMessage(string chat_id, string text, string parse_mode = "", bool disable_web_page_preview = false, bool disable_notification = false, long reply_to_message_id = 0, object reply_markup = null)
+        public MessageClass sendMessage(string chat_id, string text, ParseModes? parse_mode = null, bool disable_web_page_preview = false, bool disable_notification = false, long reply_to_message_id = 0, object reply_markup = null)
         {
             sendMessageJSON send_msg_json = new sendMessageJSON()
             {
@@ -261,8 +261,10 @@ namespace TelegramBot.TelegramMetadata
 
             List<string> skip_fields = new List<string>();
 
-            if (string.IsNullOrEmpty(parse_mode))
+            if (parse_mode is null)
                 skip_fields.Add("parse_mode");
+            else
+                send_msg_json.parse_mode = parse_mode.ToString();
 
             if (!disable_notification)
                 skip_fields.Add("disable_notification");
