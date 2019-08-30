@@ -5,11 +5,8 @@ using SimpleWebClient;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Web;
 using TelegramBot.TelegramMetadata.AvailableTypes;
 using TelegramBot.TelegramMetadata.AvailableTypes.InlineMode;
@@ -108,10 +105,12 @@ namespace TelegramBot.TelegramMetadata
         public event onLogReceivedEvent onLogEvent;
 
         private string http_response_raw = "";
-        public Int64 offset;
+        public long offset;
+
+        public string HttpRrequestStatus => MyWebClient.HttpRrequestStatus;
 
         public UserClass Me;
-        private string apiUrl { get { return "https://api.telegram.org/bot" + api_bot_token; } } // apiUrl = proto_part + "://" + HTTP_options.host + port_part + "/bot" + this.CurrentToken;
+        private string apiUrl { get { return "https://api.telegram.org/bot" + api_bot_token; } }
         private string apiFileUrl { get { return "https://api.telegram.org/file/bot" + api_bot_token + "/"; } }
         private string api_bot_token;
 
@@ -125,18 +124,6 @@ namespace TelegramBot.TelegramMetadata
         {
             if (onLogEvent != null)
                 onLogEvent(msg_txt, lm);
-        }
-
-        private void SendRequest(string api_bot_method_name, NameValueCollection request_param, InputFileClass[] file_post)
-        {
-            //http_response_raw = "";
-            //if (request_param != null && !string.IsNullOrEmpty(request_param["text"]) && string.IsNullOrWhiteSpace(request_param["parse_mode"]))
-            //    request_param["text"] = HttpUtility.UrlEncode(request_param["text"]);
-
-            //List<PostedFile> my_files = new List<PostedFile>();
-            //file_post.ToList().ForEach(x => my_files.Add(new PostedFile() { Data = x.Data, FieldName = x.FieldName, FileName = x.FileName }));
-            //http_response_raw = MyWebClient.SendRequest(apiUrl + "/" + api_bot_method_name, HttpMethod.Post, request_param, my_files, MyWebClient.RequestContentTypes.MultipartFormData);
-
         }
 
         private void SendRequest(string api_bot_method_name, NameValueCollection request_param, InputFileClass file_post)
