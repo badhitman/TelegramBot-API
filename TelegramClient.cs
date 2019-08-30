@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -126,17 +127,35 @@ namespace TelegramBot.TelegramMetadata
                 onLogEvent(msg_txt, lm);
         }
 
-        private void SendRequest(string api_bot_method_name, NameValueCollection request_param, InputFileClass file_post = null)
+        private void SendRequest(string api_bot_method_name, NameValueCollection request_param, InputFileClass[] file_post)
+        {
+            //http_response_raw = "";
+            //if (request_param != null && !string.IsNullOrEmpty(request_param["text"]) && string.IsNullOrWhiteSpace(request_param["parse_mode"]))
+            //    request_param["text"] = HttpUtility.UrlEncode(request_param["text"]);
+
+            //List<PostedFile> my_files = new List<PostedFile>();
+            //file_post.ToList().ForEach(x => my_files.Add(new PostedFile() { Data = x.Data, FieldName = x.FieldName, FileName = x.FileName }));
+            //http_response_raw = MyWebClient.SendRequest(apiUrl + "/" + api_bot_method_name, HttpMethod.Post, request_param, my_files, MyWebClient.RequestContentTypes.MultipartFormData);
+
+        }
+
+        private void SendRequest(string api_bot_method_name, NameValueCollection request_param, InputFileClass file_post)
+        {
+            http_response_raw = "";
+            if (request_param != null && !string.IsNullOrEmpty(request_param["captiom"]) && string.IsNullOrWhiteSpace(request_param["parse_mode"]))
+                request_param["captiom"] = HttpUtility.UrlEncode(request_param["captiom"]);
+
+            http_response_raw = MyWebClient.SendRequest(apiUrl + "/" + api_bot_method_name, HttpMethod.Post, request_param, new List<PostedFile>() { new PostedFile() { Data = file_post.Data, FieldName = file_post.FieldName, FileName = file_post.FileName } }, MyWebClient.RequestContentTypes.MultipartFormData);
+
+        }
+
+        private void SendRequest(string api_bot_method_name, NameValueCollection request_param)
         {
             http_response_raw = "";
             if (request_param != null && !string.IsNullOrEmpty(request_param["text"]) && string.IsNullOrWhiteSpace(request_param["parse_mode"]))
                 request_param["text"] = HttpUtility.UrlEncode(request_param["text"]);
 
-            if (file_post == null)
-                http_response_raw = MyWebClient.SendRequest(apiUrl + "/" + api_bot_method_name, HttpMethod.Post, request_param, null, MyWebClient.RequestContentTypes.ApplicationXWwwFormUrlencoded);
-            else
-                http_response_raw = MyWebClient.SendRequest(apiUrl + "/" + api_bot_method_name, HttpMethod.Post, request_param, new List<PostedFile>() { new PostedFile() { Data = file_post.Data, FieldName = file_post.FieldName, FileName = file_post.FileName } }, MyWebClient.RequestContentTypes.MultipartFormData);
-
+            http_response_raw = MyWebClient.SendRequest(apiUrl + "/" + api_bot_method_name, HttpMethod.Post, request_param, null, MyWebClient.RequestContentTypes.ApplicationXWwwFormUrlencoded);
         }
 
         /// <summary>
@@ -323,7 +342,7 @@ namespace TelegramBot.TelegramMetadata
         /// <param name="reply_to_message_id">If the message is a reply, ID of the original message</param>
         /// <param name="reply_markup">InlineKeyboardMarkup or ReplyKeyboardMarkup or ReplyKeyboardRemove or ForceReply [Optional] Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user.</param>
         /// <returns>On success, the sent Message is returned</returns>
-        public MessageClass sendDocument(string chat_id, object document, string caption = null, object thumb = null, string parse_mode = "", bool disable_notification = false, long reply_to_message_id = 0, object reply_markup = null)
+        public MessageClass sendDocument(string chat_id, object document, string caption = null, object thumb = null, ParseModes? parse_mode = null, bool disable_notification = false, long reply_to_message_id = 0, object reply_markup = null)
         {
             sendDocumentJSON send_document_json = new sendDocumentJSON()
             {
@@ -335,8 +354,10 @@ namespace TelegramBot.TelegramMetadata
             if (string.IsNullOrEmpty(caption))
                 skip_fields.Add("caption");
 
-            if (string.IsNullOrEmpty(parse_mode))
+            if (parse_mode is null)
                 skip_fields.Add("parse_mode");
+            else
+                send_document_json.parse_mode = parse_mode.ToString();
 
             if (!disable_notification)
                 skip_fields.Add("disable_notification");
@@ -376,20 +397,24 @@ namespace TelegramBot.TelegramMetadata
         /// <param name="reply_to_message_id">If the message is a reply, ID of the original message</param>
         /// <param name="reply_markup">InlineKeyboardMarkup or ReplyKeyboardMarkup or ReplyKeyboardRemove or ForceReply [Optional] Additional interface options. A JSON-serialized object for an inline keyboard (https://core.telegram.org/bots#inline-keyboards-and-on-the-fly-updating), custom reply keyboard (https://core.telegram.org/bots#keyboards), instructions to remove reply keyboard or to force a reply from the user.</param>
         /// <returns>On success, the sent Message is returned.</returns>
-        public MessageClass sendPhoto(string chat_id, object photo, string caption = null, string parse_mode = null, bool disable_notification = false, long reply_to_message_id = -1, object reply_markup = null)
+        public MessageClass sendPhoto(string chat_id, object photo, string caption = null, ParseModes? parse_mode = null, bool disable_notification = false, long reply_to_message_id = -1, object reply_markup = null)
         {
             sendPhotoJSON send_photo_json = new sendPhotoJSON()
             {
                 chat_id = chat_id
             };
 
-            List<string> skip_fields = new List<string>() { "photo" };
+            List<string> skip_fields = new List<string>();
 
             if (string.IsNullOrEmpty(caption))
                 skip_fields.Add("caption");
+            else
+                send_photo_json.caption = caption;
 
-            if (string.IsNullOrEmpty(parse_mode))
+            if (parse_mode is null)
                 skip_fields.Add("parse_mode");
+            else
+                send_photo_json.parse_mode = parse_mode.ToString();
 
             if (!disable_notification)
                 skip_fields.Add("disable_notification");
@@ -418,6 +443,45 @@ namespace TelegramBot.TelegramMetadata
             }
             sendPhotoJSON.Result result = (sendPhotoJSON.Result)SerialiserJSON.ReadObject(typeof(sendPhotoJSON.Result), http_response_raw);
             return result.result;
+        }
+
+        /// <summary>
+        /// Use this method to send a group of photos or videos as an album. 
+        /// </summary>
+        /// <param name="chat_id">Unique identifier for the target chat or username of the target channel (in the format @channelusername)</param>
+        /// <param name="media">A JSON-serialized array describing photos and videos to be sent, must include 2–10 items</param>
+        /// <param name="disable_notification">Sends the messages silently. Users will receive a notification with no sound.</param>
+        /// <param name="reply_to_message_id">If the messages are a reply, ID of the original message</param>
+        /// <returns>On success, an array of the sent Messages is returned.</returns>
+        public MessageClass[] sendMediaGroup(string chat_id, object[] media, bool disable_notification = false, long reply_to_message_id = -1)
+        {
+            //sendMediaGroupJSON send_media_group_json = new sendMediaGroupJSON()
+            //{
+            //    chat_id = chat_id
+            //};
+
+            //List<string> skip_fields = new List<string>();
+            //if (!disable_notification)
+            //    skip_fields.Add("disable_notification");
+
+            //if (reply_to_message_id == 0)
+            //    skip_fields.Add("reply_to_message_id");
+            //else
+            //    send_media_group_json.reply_to_message_id = reply_to_message_id.ToString();
+
+            //if (media is string[])
+            //{
+
+            //}
+            //else if (media is InputFileClass[])
+            //{
+            //    skip_fields.Add("media");
+            //    SendRequest(nameof(sendPhoto), send_media_group_json.GetFiealds(skip_fields.ToArray()), media as InputFileClass[]);
+            //    if (string.IsNullOrEmpty(http_response_raw))
+            //        return null;
+            //}
+
+            return null;
         }
 
         /// <summary>
@@ -486,19 +550,6 @@ namespace TelegramBot.TelegramMetadata
         /// <param name="reply_markup">InlineKeyboardMarkup or ReplyKeyboardMarkup or ReplyKeyboardRemove or ForceReply	Optional	Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user.</param>
         /// <returns>On success, the sent Message is returned.</returns>
         public MessageClass sendVideoNote(string chat_id, object video_note, long duration = -1, long length = -1, bool disable_notification = false, long reply_to_message_id = -1, object reply_markup = null)
-        {
-            return null;
-        }
-
-        /// <summary>
-        /// Use this method to send a group of photos or videos as an album. 
-        /// </summary>
-        /// <param name="chat_id">Unique identifier for the target chat or username of the target channel (in the format @channelusername)</param>
-        /// <param name="media">A JSON-serialized array describing photos and videos to be sent, must include 2–10 items</param>
-        /// <param name="disable_notification">Sends the messages silently. Users will receive a notification with no sound.</param>
-        /// <param name="reply_to_message_id">If the messages are a reply, ID of the original message</param>
-        /// <returns>On success, an array of the sent Messages is returned.</returns>
-        public MessageClass[] sendMediaGroup(string chat_id, InputMediaClass[] media, bool disable_notification = false, long reply_to_message_id = -1)
         {
             return null;
         }
