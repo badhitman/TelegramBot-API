@@ -184,8 +184,6 @@ namespace TelegramBot.TelegramMetadata
             };
 
             SendRequest(nameof(getUpdates), updates_filter.GetFiealds(new string[0]));
-            if (string.IsNullOrEmpty(http_response_raw))
-                return new Update[0];
 
             if (string.IsNullOrEmpty(http_response_raw))
                 return new Update[0];
