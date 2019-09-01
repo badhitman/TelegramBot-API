@@ -415,6 +415,7 @@ namespace TelegramBot.TelegramMetadata
 
             if (photo is string || photo is int)
             {
+                send_photo_json.photo = photo;
                 SendRequest(nameof(sendPhoto), send_photo_json.GetFiealds(skip_fields.ToArray()));
                 if (string.IsNullOrEmpty(http_response_raw))
                     return null;

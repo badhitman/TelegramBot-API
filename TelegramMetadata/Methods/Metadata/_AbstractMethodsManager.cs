@@ -18,7 +18,7 @@ namespace TelegramBot.TelegramMetadata
                 if (SkipFields.Where(c => c.Trim().ToLower() == fi.Name.Trim().ToLower()).Count() > 0)
                     continue;
 
-                if (fi.FieldType == typeof(int) || fi.FieldType == typeof(Int64) || fi.FieldType == typeof(double) || fi.FieldType == typeof(string) || fi.FieldType == typeof(long))
+                if (fi.FieldType == typeof(int) || fi.FieldType == typeof(long) || fi.FieldType == typeof(double) || fi.FieldType == typeof(string) || fi.FieldType == typeof(long) || fi.FieldType == typeof(object))
                     d.Add(fi.Name, fi.GetValue(this)?.ToString());
                 else if (fi.FieldType == typeof(bool))
                     d.Add(fi.Name, fi.GetValue(this)?.ToString().ToLower());
