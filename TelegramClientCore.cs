@@ -97,7 +97,7 @@ namespace TelegramBot.TelegramMetadata
     /// All methods in the Bot API are case-insensitive.
     /// All queries must be made using UTF-8.
     /// </summary>
-    public class TelegramClient
+    public class TelegramClientCore
     {
         public enum LogMode { Info, Ok, Err, Alert, Trace };
 
@@ -114,7 +114,7 @@ namespace TelegramBot.TelegramMetadata
         private string apiFileUrl { get { return "https://api.telegram.org/file/bot" + api_bot_token + "/"; } }
         private string api_bot_token;
 
-        public TelegramClient(string _api_bot_token)
+        public TelegramClientCore(string _api_bot_token)
         {
             api_bot_token = _api_bot_token;
             Me = getMe();
