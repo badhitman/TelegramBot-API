@@ -104,7 +104,7 @@ namespace TelegramBot.TelegramMetadata
         public delegate void onLogReceivedEvent(string msg, LogMode lm);
         public event onLogReceivedEvent onLogEvent;
 
-        private string http_response_raw = "";
+        public string http_response_raw { get; private set; } = "";
         public long offset;
 
         public string HttpRrequestStatus => MyWebClient.HttpRrequestStatus;
