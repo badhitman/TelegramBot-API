@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29306.81
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TelegramBot-API", "TelegramBot-API.csproj", "{E88B3B8C-5B33-4B68-9473-404BA2193A87}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleWebClient", "..\SimpleWebClient\SimpleWebClient.csproj", "{AF25E6F0-00A4-43F9-BE92-9E641D79B84A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E88B3B8C-5B33-4B68-9473-404BA2193A87}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E88B3B8C-5B33-4B68-9473-404BA2193A87}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E88B3B8C-5B33-4B68-9473-404BA2193A87}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E88B3B8C-5B33-4B68-9473-404BA2193A87}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF25E6F0-00A4-43F9-BE92-9E641D79B84A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF25E6F0-00A4-43F9-BE92-9E641D79B84A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF25E6F0-00A4-43F9-BE92-9E641D79B84A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF25E6F0-00A4-43F9-BE92-9E641D79B84A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {927B18AF-27EE-4AB4-BC9A-58773A9614EC}
+	EndGlobalSection
+EndGlobal
